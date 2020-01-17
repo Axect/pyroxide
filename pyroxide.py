@@ -27,30 +27,33 @@ C = ffi.dlopen("pyroxide_rs/target/release/libpyroxide_rs.so")
 
 # Make CMatrix
 class PyMatrix:
-    def __init__(self, C, data, row, col, by_row):
-        cm = ffi.new("CMatrix *")
-        cm.data = ffi.new("double []", data)
-        cm.row = row
-        cm.col = col
-        cm.by_row = by_row
-        self.cm = cm
+    def __init__(self, data, row, col, by_row):
+        self.data = data
+        self.row = row
+        self.col = col
+        self.by_row = by_row
 
-    def from_cmatrix(self, cm):
-        self.cm = cm
+    @classmethod
+    def from_cmatrix(cls, cm):
+        return cls([cm.data[i] for i in range(cm.row * cm.col)], cm.row, cm.col, cm.by_row)
+
+    def to_cmatrix(self):
+        data = ffi.new("double []", self.data)
+        cm = C.cmatrix(data, self.row, self.col, self.by_row)
+        return cm
 
     def __add__(self, other):
-        cm1 = ffi.new("CMatrix *")
-        cm2 = ffi.new("CMatrix *")
-        cm1 = self.cm
-        cm2 = other.cm
-        C = ffi.dlopen("pyroxide_rs/target/release/libpyroxide_rs.so")
+        cm1 = C.cmatrix(ffi.new("double []", self.data), self.row, self.col, self.by_row)
+        cm2 = other.to_cmatrix()
+        print([cm1.data[i] for i in range(4)])
         cm = C.add(cm1, cm2)
         return PyMatrix.from_cmatrix(cm)
 
 pm1 = PyMatrix([1,2,3,4], 2, 2, True)
 pm2 = PyMatrix([1,2,3,4], 2, 2, False)
-#new_pm = pm1 + pm2
 
-#print(new_pm)
+print(pm1.data)
+print(pm2.data)
 
-print(pm1)
+new_pm = pm1 + pm2
+print(new_pm.data)

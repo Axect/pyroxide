@@ -13,3 +13,6 @@ crate-type = ["dylib"]
 [dependencies.peroxide]
 version = "0.19"
 features = ["O3"]
+
+[dependencies.c_vec]
+version = "1"
